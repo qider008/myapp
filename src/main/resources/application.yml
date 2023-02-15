@@ -1,0 +1,38 @@
+server:
+  port: 8088
+spring:
+  output:
+    ansi:
+      enabled: always
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: myapp
+  devtools:
+    add-properties: false
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/myapp?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&allowPublicKeyRetrieval=true
+    driver-class-name:  com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    open-in-view: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    properties:
+      hibernate:
+        '[enable_lazy_load_no_trans]': true 
+        '[format_sql]': true
+        
+logging:
+  level:
+    root: INFO
+    '[org.springframework.web]': info
+    '[org.springframework.security]': debug
+    '[org.springframework.security.oauth2]': debug
