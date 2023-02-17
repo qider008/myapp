@@ -36,7 +36,7 @@ public class Client extends BaseEntity {
 	private String authorizationGrantTypes;
 
 	@Column(length = 1000)
-	private String redirectUris;
+	private String redirectUris = "http://localhost:8088/login";
 
 	@Column(length = 1000)
 	private String scopes;

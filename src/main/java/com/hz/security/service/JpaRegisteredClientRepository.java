@@ -1,5 +1,6 @@
 package com.hz.security.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
 	@Override
 	public RegisteredClient findByClientId(String clientId) {
 		Assert.hasText(clientId, "clientId cannot be empty");
+		System.out.println(clientId);
 		return this.clientRepository.findByClientId(clientId).map(this::toObject).orElse(null);
 	}
 
@@ -63,20 +65,40 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
 		Set<String> authorizationGrantTypes = StringUtils.commaDelimitedListToSet(client.getAuthorizationGrantTypes());
 		Set<String> redirectUris = StringUtils.commaDelimitedListToSet(client.getRedirectUris());
 		Set<String> clientScopes = StringUtils.commaDelimitedListToSet(client.getScopes());
-
-		RegisteredClient.Builder builder = RegisteredClient.withId(client.getId()).clientId(client.getClientId()).clientIdIssuedAt(client.getClientIdIssuedAt())
-				.clientSecret(client.getClientSecret()).clientSecretExpiresAt(client.getClientSecretExpiresAt()).clientName(client.getClientName())
+		// @formatter:off
+		RegisteredClient.Builder builder = RegisteredClient
+				.withId(client.getId())
+				.clientId(client.getClientId())
+				.clientIdIssuedAt(client.getClientIdIssuedAt())
+				.clientSecret(client.getClientSecret())
+				.clientSecretExpiresAt(client.getClientSecretExpiresAt())
+				.clientName(client.getClientName())
 				.clientAuthenticationMethods(authenticationMethods -> clientAuthenticationMethods
 						.forEach(authenticationMethod -> authenticationMethods.add(resolveClientAuthenticationMethod(authenticationMethod))))
 				.authorizationGrantTypes((grantTypes) -> authorizationGrantTypes.forEach(grantType -> grantTypes.add(resolveAuthorizationGrantType(grantType))))
-				.redirectUris((uris) -> uris.addAll(redirectUris)).scopes((scopes) -> scopes.addAll(clientScopes));
+				.redirectUris((uris) -> uris.addAll(redirectUris))
+				.scopes((scopes) -> scopes.addAll(clientScopes));
 
-		Map<String, Object> clientSettingsMap = parseMap(client.getClientSettings());
-		builder.clientSettings(ClientSettings.withSettings(clientSettingsMap).build());
+	    
+		if (org.apache.commons.lang3.StringUtils.isNotBlank(client.getClientSettings())) {
+			Map<String, Object> clientSettingsMap = parseMap(client.getClientSettings());
+			builder.clientSettings(ClientSettings.withSettings(clientSettingsMap).build());
+		} else {
+			builder.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build());
+		}
 
-		Map<String, Object> tokenSettingsMap = parseMap(client.getTokenSettings());
-		builder.tokenSettings(TokenSettings.withSettings(tokenSettingsMap).build());
-
+		if (org.apache.commons.lang3.StringUtils.isNotBlank(client.getTokenSettings())) {
+			Map<String, Object> tokenSettingsMap = parseMap(client.getTokenSettings());
+			builder.tokenSettings(TokenSettings.withSettings(tokenSettingsMap).build());
+		} else {
+			builder.tokenSettings(
+					TokenSettings.builder()
+					.accessTokenTimeToLive(Duration.ofHours(1))
+					.refreshTokenTimeToLive(Duration.ofHours(1))
+					.reuseRefreshTokens(true)
+					.build());
+		}
+		// @formatter:on
 		return builder.build();
 	}
 
